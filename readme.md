@@ -46,7 +46,8 @@ in this case is applying a gaussian blur filter to an image.
 7. Please provide a review of the pull request where you provide suggestions
    for converting the `apply_filter` function from vanilla python to making use
 of numpy instead, along with any other comments or alterations you believe
-should occur. If you have any questions, feel free to email
+should occur. Please make sure to provide constructive feedback as if you were
+doing a pull request for a peer. If you have any questions, feel free to email
 jared@redcarpet.dev.
 
 6. Leave the PR in review, do not merge it.
