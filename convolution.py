@@ -1,84 +1,129 @@
-# gaussian blur filter
-filter = [
-  [1/16, 1/8, 1/16],
-  [1/8, 1/4, 1/8],
-  [1/16, 1/8, 1/16],
-]
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 9x11 single channel image of intensities
-image = [
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9],
-]
 
-def print_image(image):
-  for row in image:
-    print(row)  
+class Convolution:
 
-# apply `filter` to `image`
-# return the blurred image
-def apply_filter(image, filter):
-  # pad the input image with zeroes
-  # start with an 2d array of zeroes that can accommodate the embedded image
-  rows = len(image)
-  cols = len(image[0])
-  pad_rows = len(filter) // 2
-  pad_cols = len(filter[0]) // 2
-  padded_image = [
-    [0 for i in range(cols + pad_rows * 2)]
-     for j in range(rows + pad_cols * 2)
-  ]
+    def __init__(self, image, filter):
+        """
+        Input
+        :param image: input image
+        :param filter: input filter
+        """
+        self.image = np.array(image)
+        self.filter = np.array(filter)
+        self.blurry_image = []
 
-  # fill the interior with our image
-  for i in range(pad_rows, rows + pad_rows):
-    for j in range(pad_cols, cols + pad_cols):
-      padded_image[i][j] = image[i - 1][j - 1]
+    def print_image(self, blurry=False):
+        """
+        Print the image pixel intensity matrix
+        :param blurry: If True, we print the intensity of the blurry image,
+                       otherwise, we print the intensity of the original image.
+        :return: M times 1 * N image pixel intensity vector. M is the number of the image rows,
+                 and N is the number of the image columns
+        """
+        if blurry:
+            image_print = self.blurry_image
+        else:
+            image_print = self.image
 
-  # create an output image, the same size as the input
-  output = [
-    [0 for i in range(cols)]
-     for j in range(rows)
-  ]
-  for i in range(0, rows):
-    for j in range(0, cols):
-      
-      # apply the patch to the appropriate pixel
-      sum = 0
-      for y in range(0, len(filter)):
-        for x in range(0, len(filter[0])):
-          # translate to the appropriate position within the padded image 
-          image_i = i + y
-          image_j = j + x
-          sum += padded_image[image_i][image_j] * filter[y][x]
-      output[i][j] = sum
-      
-  return output
+        for row in image_print:
+            print(row)
 
-# apply the filter to the image
-blurred_image = apply_filter(image, filter)
+    def visualization(self, blurry=False):
+        """
+        Input image visualization
+        :param blurry: If True, we visualize the blurry image in the grayscale,
+                             otherwise, we visualize the original image in the grayscale.
+        :return: None
+        """
+        if blurry:
+            plt.imshow(self.blurry_image, cmap='gray')
+        else:
+            plt.imshow(self.image, cmap='gray')
+        plt.show()
 
-# ensure the blurred_image matches the expected_image
-expected_image = [
-  [0.75, 1.5, 2.25, 3.0, 3.75, 4.5, 5.25, 6.0, 4.875],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
-  [0.75, 1.5, 2.25, 3.0, 3.75, 4.5, 5.25, 6.0, 4.875]
-]
+    def zero_pad(self):
+        """
+        Zero pad the image
+        :return: Padded image
+        """
+        filtersize = len(self.filter)
+        padded_image = np.pad(self.image, pad_width=filtersize // 2)
+        return padded_image
 
-print("blurred_image == expected_image?", blurred_image == expected_image)
+    def apply_filter(self):
+        """
+        apply the Convolutional Kernel to the image
+        :return: the blurred image
+        """
+        filtersize = len(self.filter)
+        image_height, image_width = len(self.image), len(self.image[0])
+        padded_image = self.zero_pad()
+
+        self.blurry_image = []
+        for i in range(image_height):
+            for j in range(image_width):
+                new_intensity = np.sum(padded_image[i:filtersize + i, j:filtersize + j] * self.filter)
+                self.blurry_image.append(new_intensity)
+
+        self.blurry_image = np.array(self.blurry_image).reshape((image_height, image_width))
+        return self.blurry_image
+
+
+if __name__ == '__main__':
+    plt.ion()
+
+    # gaussian blur filter
+    filter = [
+        [1 / 16, 1 / 8, 1 / 16],
+        [1 / 8, 1 / 4, 1 / 8],
+        [1 / 16, 1 / 8, 1 / 16],
+    ]
+
+    # 9x11 single channel image of intensities
+    image = [
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ]
+
+    # ensure the blurred_image matches the expected_image
+    expected_image = [
+        [0.75, 1.5, 2.25, 3.0, 3.75, 4.5, 5.25, 6.0, 4.875],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 6.5],
+        [0.75, 1.5, 2.25, 3.0, 3.75, 4.5, 5.25, 6.0, 4.875]
+    ]
+
+    a = Convolution(image, filter)
+
+    # apply the filter to the image
+    blurred_image = a.apply_filter()
+
+    # image visualization
+    a.visualization(blurry=False)
+
+    # print the pixel intensity
+    a.print_image(blurry=False)
+
+    # check if the blurred image is correct
+    print("blurred_image == expected_image?", blurred_image == expected_image)
+
+    plt.ioff()
+    plt.show()
